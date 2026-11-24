@@ -29,6 +29,9 @@
 #define OPT_MAX_SHUTDOWN_TIME_SEC "max_shutdown_time_sec"
 #define OPT_BIND_IP "bind_ip"
 #define OPT_IP_FAMILY "ip_family"
+#define OPT_SEND_TIMEOUT_SEC "send_timeout_sec"
+#define DEFAULT_SEND_TIMEOUT_SEC 15
+#define MAX_SEND_TIMEOUT_SEC 600
 #define OPT_NEWSOCKETLOOP_ENABLED "new_socket_loop_enabled"
 #define OPT_LOWLATENCY_ENABLED "low_latency_mode_enabled"
 #define OPT_METADATA_MULTITRACK "metadata_multitrack"
@@ -76,6 +79,7 @@ struct rtmp_stream {
 	pthread_t send_thread;
 
 	int max_shutdown_time_sec;
+	int send_timeout_sec;
 
 	os_sem_t *send_sem;
 	os_event_t *stop_event;

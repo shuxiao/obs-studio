@@ -1180,6 +1180,8 @@ static int try_connect(struct rtmp_stream *stream)
 		return OBS_OUTPUT_BAD_PATH;
 
 	RTMP_EnableWrite(&stream->rtmp);
+	stream->rtmp.Link.sendTimeout = stream->send_timeout_sec;
+	info("Socket send timeout: %d second(s)", stream->send_timeout_sec);
 
 	dstr_copy(&stream->encoder_name, "FMLE/3.0 (compatible; FMSc/1.0)");
 
@@ -1323,6 +1325,20 @@ error:
 	return false;
 }
 
+static int get_send_timeout(obs_data_t *settings)
+{
+#ifdef _WIN32
+	if (obs_data_get_bool(settings, OPT_NEWSOCKETLOOP_ENABLED))
+		return DEFAULT_SEND_TIMEOUT_SEC;
+#endif
+
+	int64_t timeout = obs_data_get_int(settings, OPT_SEND_TIMEOUT_SEC);
+	if (timeout < 1 || timeout > MAX_SEND_TIMEOUT_SEC)
+		return DEFAULT_SEND_TIMEOUT_SEC;
+
+	return (int)timeout;
+}
+
 static bool init_connect(struct rtmp_stream *stream)
 {
 	obs_service_t *service;
@@ -1359,6 +1375,7 @@ static bool init_connect(struct rtmp_stream *stream)
 	drop_b = (int64_t)obs_data_get_int(settings, OPT_DROP_THRESHOLD);
 	drop_p = (int64_t)obs_data_get_int(settings, OPT_PFRAME_DROP_THRESHOLD);
 	stream->max_shutdown_time_sec = (int)obs_data_get_int(settings, OPT_MAX_SHUTDOWN_TIME_SEC);
+	stream->send_timeout_sec = get_send_timeout(settings);
 
 	long long overall_audio_bitrate = 0;
 	long long overall_video_bitrate = 0;
@@ -1906,11 +1923,22 @@ static void rtmp_stream_defaults(obs_data_t *defaults)
 	obs_data_set_default_int(defaults, OPT_PFRAME_DROP_THRESHOLD, 900);
 	obs_data_set_default_int(defaults, OPT_MAX_SHUTDOWN_TIME_SEC, 30);
 	obs_data_set_default_string(defaults, OPT_BIND_IP, "default");
+	obs_data_set_default_int(defaults, OPT_SEND_TIMEOUT_SEC, DEFAULT_SEND_TIMEOUT_SEC);
 #ifdef _WIN32
 	obs_data_set_default_bool(defaults, OPT_NEWSOCKETLOOP_ENABLED, false);
 	obs_data_set_default_bool(defaults, OPT_LOWLATENCY_ENABLED, false);
 #endif
 }
+
+#ifdef _WIN32
+static bool socket_loop_modified(obs_properties_t *props, obs_property_t *property, obs_data_t *settings)
+{
+	UNUSED_PARAMETER(property);
+	obs_property_t *timeout = obs_properties_get(props, OPT_SEND_TIMEOUT_SEC);
+	obs_property_set_enabled(timeout, !obs_data_get_bool(settings, OPT_NEWSOCKETLOOP_ENABLED));
+	return true;
+}
+#endif
 
 static obs_properties_t *rtmp_stream_properties(void *unused)
 {
@@ -1923,6 +1951,10 @@ static obs_properties_t *rtmp_stream_properties(void *unused)
 	p = obs_properties_add_int(props, OPT_DROP_THRESHOLD, obs_module_text("RTMPStream.DropThreshold"), 200, 10000,
 				   100);
 	obs_property_int_set_suffix(p, " ms");
+
+	p = obs_properties_add_int(props, OPT_SEND_TIMEOUT_SEC, obs_module_text("RTMPStream.SendTimeout"), 1,
+				   MAX_SEND_TIMEOUT_SEC, 1);
+	obs_property_int_set_suffix(p, " s");
 
 	p = obs_properties_add_list(props, OPT_IP_FAMILY, obs_module_text("IPFamily"), OBS_COMBO_TYPE_LIST,
 				    OBS_COMBO_FORMAT_STRING);
@@ -1944,7 +1976,8 @@ static obs_properties_t *rtmp_stream_properties(void *unused)
 	netif_saddr_data_free(&addrs);
 
 #ifdef _WIN32
-	obs_properties_add_bool(props, OPT_NEWSOCKETLOOP_ENABLED, obs_module_text("RTMPStream.NewSocketLoop"));
+	p = obs_properties_add_bool(props, OPT_NEWSOCKETLOOP_ENABLED, obs_module_text("RTMPStream.NewSocketLoop"));
+	obs_property_set_modified_callback(p, socket_loop_modified);
 	obs_properties_add_bool(props, OPT_LOWLATENCY_ENABLED, obs_module_text("RTMPStream.LowLatencyMode"));
 #endif
 

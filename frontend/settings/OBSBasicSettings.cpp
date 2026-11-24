@@ -572,6 +572,7 @@ OBSBasicSettings::OBSBasicSettings(QWidget *parent)
 	HookWidget(ui->confirmOnExit,        CHECK_CHANGED,  ADV_CHANGED);
 	HookWidget(ui->bindToIP,             COMBO_CHANGED,  ADV_CHANGED);
 	HookWidget(ui->ipFamily,             COMBO_CHANGED,  ADV_CHANGED);
+	HookWidget(ui->rtmpSendTimeout,      SCROLL_CHANGED, ADV_CHANGED);
 	HookWidget(ui->enableNewSocketLoop,  CHECK_CHANGED,  ADV_CHANGED);
 	HookWidget(ui->enableLowLatencyMode, CHECK_CHANGED,  ADV_CHANGED);
 	HookWidget(ui->hotkeyFocusType,      COMBO_CHANGED,  ADV_CHANGED);
@@ -2614,6 +2615,10 @@ void OBSBasicSettings::LoadAdvancedSettings()
 	const char *hotkeyFocusType = config_get_string(App()->GetUserConfig(), "General", "HotkeyFocusType");
 	bool dynBitrate = config_get_bool(main->Config(), "Output", "DynamicBitrate");
 	const char *ipFamily = config_get_string(main->Config(), "Output", "IPFamily");
+	int64_t sendTimeoutSec = config_get_int(main->Config(), "Output", "RTMPSendTimeoutSec");
+	if (sendTimeoutSec < ui->rtmpSendTimeout->minimum() || sendTimeoutSec > ui->rtmpSendTimeout->maximum()) {
+		sendTimeoutSec = 15;
+	}
 	bool confirmOnExit = config_get_bool(App()->GetUserConfig(), "General", "ConfirmOnExit");
 
 	loading = true;
@@ -2652,6 +2657,7 @@ void OBSBasicSettings::LoadAdvancedSettings()
 	ui->hdrNominalPeakLevel->setValue(hdrNominalPeakLevel);
 
 	SetComboByValue(ui->ipFamily, ipFamily);
+	ui->rtmpSendTimeout->setValue(static_cast<int>(sendTimeoutSec));
 	if (!SetComboByValue(ui->bindToIP, bindIP)) {
 		SetInvalidValue(ui->bindToIP, bindIP, bindIP);
 	}
@@ -3336,6 +3342,7 @@ void OBSBasicSettings::SaveAdvancedSettings()
 	SaveSpinBox(ui->reconnectMaxRetries, "Output", "MaxRetries");
 	SaveComboData(ui->bindToIP, "Output", "BindIP");
 	SaveComboData(ui->ipFamily, "Output", "IPFamily");
+	SaveSpinBox(ui->rtmpSendTimeout, "Output", "RTMPSendTimeoutSec");
 	SaveCheckBox(ui->autoRemux, "Video", "AutoRemux");
 	SaveCheckBox(ui->dynBitrate, "Output", "DynamicBitrate");
 
@@ -5799,6 +5806,8 @@ void OBSBasicSettings::UpdateAdvNetworkGroup()
 	ui->dynBitrate->setVisible(enabled);
 	ui->ipFamilyLabel->setVisible(enabled);
 	ui->ipFamily->setVisible(enabled);
+	ui->rtmpSendTimeoutLabel->setVisible(enabled);
+	ui->rtmpSendTimeout->setVisible(enabled);
 #ifdef _WIN32
 	ui->enableNewSocketLoop->setVisible(enabled);
 	ui->enableLowLatencyMode->setVisible(enabled);

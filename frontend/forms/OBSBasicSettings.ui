@@ -8591,14 +8591,43 @@
                    <item row="2" column="1">
                     <widget class="QComboBox" name="bindToIP"/>
                    </item>
-                   <item row="4" column="1">
+                   <item row="3" column="0">
+                    <widget class="QLabel" name="rtmpSendTimeoutLabel">
+                     <property name="text">
+                      <string>Basic.Settings.Advanced.Network.SendTimeout</string>
+                     </property>
+                     <property name="buddy">
+                      <cstring>rtmpSendTimeout</cstring>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="1">
+                    <widget class="OBS::SpinBox" name="rtmpSendTimeout">
+                     <property name="toolTip">
+                      <string>Basic.Settings.Advanced.Network.SendTimeout.Tooltip</string>
+                     </property>
+                     <property name="suffix">
+                      <string> s</string>
+                     </property>
+                     <property name="minimum">
+                      <number>1</number>
+                     </property>
+                     <property name="maximum">
+                      <number>600</number>
+                     </property>
+                     <property name="value">
+                      <number>15</number>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="5" column="1">
                     <widget class="QCheckBox" name="enableNewSocketLoop">
                      <property name="text">
                       <string>Basic.Settings.Advanced.Network.EnableNewSocketLoop</string>
                      </property>
                     </widget>
                    </item>
-                   <item row="5" column="1">
+                   <item row="6" column="1">
                     <widget class="QCheckBox" name="enableLowLatencyMode">
                      <property name="enabled">
                       <bool>false</bool>
@@ -8608,7 +8637,7 @@
                      </property>
                     </widget>
                    </item>
-                   <item row="4" column="0">
+                   <item row="5" column="0">
                     <spacer name="horizontalSpacer_7">
                      <property name="orientation">
                       <enum>Qt::Orientation::Horizontal</enum>
@@ -8621,7 +8650,7 @@
                      </property>
                     </spacer>
                    </item>
-                   <item row="3" column="1">
+                   <item row="4" column="1">
                     <widget class="QCheckBox" name="dynBitrate">
                      <property name="toolTip">
                       <string>Basic.Settings.Output.DynamicBitrate.TT</string>
@@ -8999,6 +9028,7 @@
   <tabstop>reconnectRetryDelay</tabstop>
   <tabstop>reconnectMaxRetries</tabstop>
   <tabstop>bindToIP</tabstop>
+  <tabstop>rtmpSendTimeout</tabstop>
   <tabstop>dynBitrate</tabstop>
   <tabstop>enableNewSocketLoop</tabstop>
   <tabstop>enableLowLatencyMode</tabstop>
@@ -9142,6 +9172,18 @@
      <y>39</y>
     </hint>
    </hints>
+  </connection>
+  <connection>
+   <sender>enableNewSocketLoop</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>rtmpSendTimeout</receiver>
+   <slot>setDisabled(bool)</slot>
+  </connection>
+  <connection>
+   <sender>enableNewSocketLoop</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>rtmpSendTimeoutLabel</receiver>
+   <slot>setDisabled(bool)</slot>
   </connection>
   <connection>
    <sender>snappingEnabled</sender>

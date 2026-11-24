@@ -724,6 +724,7 @@ bool SimpleOutput::StartStreaming(obs_service_t *service)
 	OBSDataAutoRelease settings = obs_data_create();
 	obs_data_set_string(settings, "bind_ip", bindIP);
 	obs_data_set_string(settings, "ip_family", ipFamily);
+	obs_data_set_int(settings, "send_timeout_sec", config_get_int(main->Config(), "Output", "RTMPSendTimeoutSec"));
 #ifdef _WIN32
 	obs_data_set_bool(settings, "new_socket_loop_enabled", enableNewSocketLoop);
 	obs_data_set_bool(settings, "low_latency_mode_enabled", enableLowLatencyMode);

@@ -708,6 +708,7 @@ bool OBSBasic::InitBasicConfigDefaults()
 
 	config_set_default_string(activeConfiguration, "Output", "BindIP", "default");
 	config_set_default_string(activeConfiguration, "Output", "IPFamily", "IPv4+IPv6");
+	config_set_default_uint(activeConfiguration, "Output", "RTMPSendTimeoutSec", 15);
 	config_set_default_bool(activeConfiguration, "Output", "NewSocketLoopEnable", false);
 	config_set_default_bool(activeConfiguration, "Output", "LowLatencyEnable", false);
 
